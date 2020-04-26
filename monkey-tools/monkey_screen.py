@@ -6,7 +6,7 @@ import sys
 from datetime import time, datetime
 from time import sleep
 from wsgiref.validate import validator
-
+import itchat
 
 class MonkeyScreen:
     def __init__(self, devices):
@@ -41,15 +41,47 @@ class MonkeyScreen:
         if "ANR" or "CRASH" in log:
             os.popen("adb -s "+device+" pull /sdcard/"+self.now_sec+"")
             os.popen("adb -s "+device+" rm /sdcard/"+self.now_sec+"")
+            return False
+
+    def delete_video(self):
+        os.popen("adb shell rm")
+        pass
+
+    def create_video_doc(self):
+        check_res = os.popen("adb shell ls /sdcard/monkeyVideo")
+        if "No such file or directory" in check_res:
+            os.popen("adb shell mkdir /sdcard/monkeyVideo")
+        else:
+            return "文件夹已存在"
+
+    @itchat.msg_register(itchat.content.TEXT)
+    def text_reply(msg):
+        # print(msg)
+        flag = 0
+        # 发送内容
+        message = msg['Text']
+        # 接收者
+        toName = msg['ToUserName']
+        print(toName)
+
+        itchat.send_video('要发送的视频路径和视频名',"filehelper")
+
 
 if __name__ == "__main__":
+
+    itchat.auto_login(True)
+    itchat.send('hello', "filehelper")
+    itchat.run()
+
     res = sys.argv
     newMonkey = MonkeyScreen()
     newMonkey.run_monkey(newMonkey.get_devices())
     while 1:
-        sleep(2)
+        # sleep(2)
         devices = newMonkey.get_devices()
-        for i in devices:
+        for device_screen in devices:
+            newMonkey.monkey_screen(device_screen)
+
             newMonkey.check_log(i)
     # print(str(datetime.now().strftime('%Y-%m-%d %H:%M')[:-1]+"0"))
 
